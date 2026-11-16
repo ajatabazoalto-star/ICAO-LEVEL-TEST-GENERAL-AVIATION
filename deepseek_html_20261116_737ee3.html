@@ -1,0 +1,923 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICAO Aviation English — Level Test</title>
+<style>
+  :root{
+    --navy:#0b1f3a; --navy2:#122a4d; --sky:#0ea5e9; --sky2:#38bdf8;
+    --amber:#f59e0b; --green:#10b981; --red:#ef4444; --purple:#8b5cf6;
+    --ink:#0f172a; --paper:#f1f5f9; --card:#ffffff; --muted:#64748b;
+    --border:#e2e8f0; --radius:14px; --shadow:0 4px 20px rgba(15,23,42,0.08);
+    font-family:'Segoe UI',system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--paper);color:var(--ink);min-height:100vh;}
+
+  /* HEADER */
+  .topbar{background:linear-gradient(135deg,var(--navy),var(--navy2));color:#fff;padding:14px 20px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 12px rgba(0,0,0,.15);position:sticky;top:0;z-index:100;}
+  .topbar .logo{font-size:26px;filter:drop-shadow(0 2px 4px rgba(14,165,233,.4));}
+  .topbar .brand{flex:1;}
+  .topbar .brand h1{font-size:15px;font-weight:800;letter-spacing:.5px;}
+  .topbar .brand p{font-size:11px;color:#94a3b8;margin-top:2px;letter-spacing:.3px;}
+  .lang-switch{display:flex;gap:4px;background:rgba(255,255,255,0.08);padding:3px;border-radius:8px;}
+  .lang-switch button{background:transparent;border:none;color:#cbd5e1;padding:5px 9px;border-radius:6px;font-size:11px;font-weight:700;cursor:pointer;transition:.15s;}
+  .lang-switch button.active{background:var(--sky);color:#fff;}
+  .lang-switch button:hover:not(.active){background:rgba(255,255,255,0.12);}
+
+  /* SCREENS */
+  .screen{display:none;max-width:820px;margin:0 auto;padding:28px 18px 60px;animation:fade .4s ease;}
+  .screen.active{display:block;}
+  @keyframes fade{from{opacity:0;transform:translateY(8px);}to{opacity:1;transform:translateY(0);}}
+
+  /* WELCOME */
+  .welcome-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:40px 32px;text-align:center;}
+  .welcome-card .hero-icon{font-size:72px;margin-bottom:14px;display:inline-block;filter:drop-shadow(0 8px 20px rgba(14,165,233,0.35));}
+  .welcome-card h2{font-size:clamp(22px,4vw,30px);color:var(--navy);margin-bottom:8px;letter-spacing:-.5px;}
+  .welcome-card .subtitle{color:var(--muted);font-size:14.5px;line-height:1.6;margin-bottom:26px;max-width:560px;margin-left:auto;margin-right:auto;}
+  .test-meta{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin:24px 0 26px;}
+  .meta-item{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:14px 10px;}
+  .meta-item .meta-num{font-size:22px;font-weight:900;color:var(--sky);margin-bottom:2px;}
+  .meta-item .meta-label{font-size:11px;color:var(--muted);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
+  .info-box{background:#eff6ff;border-left:4px solid var(--sky);padding:14px 18px;border-radius:10px;font-size:13px;color:#1e40af;line-height:1.6;text-align:left;margin-bottom:24px;}
+  .info-box b{color:var(--navy);}
+  .types-box{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:10px;margin-bottom:24px;text-align:left;}
+  .type-item{background:#f8fafc;border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-size:12.5px;color:var(--muted);line-height:1.5;}
+  .type-item b{color:var(--navy);display:block;margin-bottom:4px;font-size:13px;}
+  .start-btn{background:linear-gradient(135deg,var(--sky),var(--purple));color:#fff;border:none;padding:15px 40px;border-radius:12px;font-size:16px;font-weight:800;cursor:pointer;transition:.2s;box-shadow:0 8px 24px rgba(14,165,233,0.35);letter-spacing:.3px;}
+  .start-btn:hover{transform:translateY(-2px);box-shadow:0 12px 30px rgba(14,165,233,0.45);}
+
+  /* TEST */
+  .test-top{background:var(--card);border-radius:var(--radius);padding:16px 20px;box-shadow:var(--shadow);margin-bottom:16px;}
+  .test-top-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
+  .q-counter{font-size:13px;font-weight:800;color:var(--navy);}
+  .q-counter .q-cur{color:var(--sky);font-size:16px;}
+  .timer{background:#f1f5f9;color:var(--muted);padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700;font-variant-numeric:tabular-nums;}
+  .section-tag{display:inline-block;background:#eff6ff;color:#1e40af;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;}
+  .progress-bar-outer{height:6px;background:#e2e8f0;border-radius:3px;overflow:hidden;}
+  .progress-bar-inner{height:100%;width:0%;background:linear-gradient(90deg,var(--sky),var(--purple));transition:width .4s ease;border-radius:3px;}
+
+  .q-card{background:var(--card);border-radius:var(--radius);padding:32px 28px;box-shadow:var(--shadow);}
+  .q-meta{display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:8px;}
+  .q-level{font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:20px;background:#fef3c7;color:#92400e;letter-spacing:.5px;text-transform:uppercase;}
+  .role-badge{font-size:10.5px;font-weight:800;padding:3px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;}
+  .role-badge.pilot{background:#dbeafe;color:#1e40af;}
+  .role-badge.atc{background:#fef3c7;color:#92400e;}
+  .role-badge.tcp{background:#fee2e2;color:#991b1b;}
+  .role-badge.mech{background:#ede9fe;color:#5b21b6;}
+  .role-badge.disp{background:#d1fae5;color:#065f46;}
+  .role-badge.avsec{background:#fce7f3;color:#9d174d;}
+
+  .audio-zone{background:#f8fafc;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:22px;display:flex;align-items:center;gap:16px;}
+  .play-big{width:56px;height:56px;border-radius:50%;background:linear-gradient(135deg,var(--sky),var(--sky2));color:#fff;border:none;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:.2s;box-shadow:0 4px 14px rgba(14,165,233,0.3);}
+  .play-big:hover{transform:scale(1.06);box-shadow:0 6px 20px rgba(14,165,233,0.5);}
+  .play-big.playing{animation:pulse 1.2s infinite;}
+  @keyframes pulse{0%,100%{box-shadow:0 4px 14px rgba(14,165,233,0.3);}50%{box-shadow:0 4px 14px rgba(14,165,233,0.3),0 0 0 12px rgba(14,165,233,0.15);}}
+  .audio-zone-info{flex:1;min-width:0;}
+  .audio-zone-info .audio-label{font-size:10.5px;font-weight:800;color:var(--sky);letter-spacing:.5px;text-transform:uppercase;margin-bottom:3px;}
+  .audio-zone-info .audio-hint{font-size:13px;color:var(--muted);line-height:1.4;}
+
+  .question-text{font-size:17px;font-weight:700;color:var(--ink);line-height:1.55;margin-bottom:22px;}
+  .question-text .lang-hint{display:block;font-size:11px;font-weight:600;color:var(--muted);margin-top:6px;letter-spacing:.3px;}
+
+  /* MCQ */
+  .options{display:grid;gap:10px;}
+  .option-btn{background:#fff;border:2px solid var(--border);border-radius:12px;padding:14px 16px;font-size:14.5px;font-weight:600;color:var(--ink);text-align:left;cursor:pointer;transition:.15s;display:flex;align-items:center;gap:14px;font-family:inherit;}
+  .option-btn:hover:not(:disabled){border-color:var(--sky);background:#f0f9ff;transform:translateX(2px);}
+  .option-btn:disabled{cursor:not-allowed;}
+  .option-letter{width:30px;height:30px;border-radius:8px;background:#f1f5f9;color:var(--muted);display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;flex-shrink:0;transition:.15s;}
+  .option-btn:hover:not(:disabled) .option-letter{background:var(--sky);color:#fff;}
+  .option-btn.selected-correct{background:#ecfdf5;border-color:var(--green);color:#065f46;}
+  .option-btn.selected-correct .option-letter{background:var(--green);color:#fff;}
+  .option-btn.selected-wrong{background:#fef2f2;border-color:var(--red);color:#991b1b;}
+  .option-btn.selected-wrong .option-letter{background:var(--red);color:#fff;}
+  .option-btn.reveal-correct{background:#ecfdf5;border-color:var(--green);color:#065f46;}
+  .option-btn.reveal-correct .option-letter{background:var(--green);color:#fff;}
+
+  /* FILL */
+  .fill-sentence{font-size:17px;font-weight:600;line-height:2.2;padding:20px;background:#f8fafc;border:1px solid var(--border);border-radius:12px;margin:16px 0;color:var(--ink);}
+  .fill-input{display:inline-block;min-width:150px;max-width:280px;border:none;border-bottom:3px solid var(--sky);background:#eff6ff;padding:6px 12px;font-size:16px;font-weight:700;color:var(--navy);text-align:center;border-radius:6px 6px 0 0;outline:none;font-family:inherit;transition:.15s;margin:0 4px;}
+  .fill-input:focus{background:#dbeafe;border-bottom-color:var(--purple);}
+  .fill-input.selected-correct{background:#ecfdf5;border-bottom-color:var(--green);color:#065f46;}
+  .fill-input.selected-wrong{background:#fef2f2;border-bottom-color:var(--red);color:#991b1b;}
+  .fill-actions{margin-top:16px;display:flex;gap:10px;}
+  .check-btn{background:linear-gradient(135deg,var(--sky),var(--purple));color:#fff;border:none;padding:12px 24px;border-radius:10px;font-size:14px;font-weight:800;cursor:pointer;transition:.2s;box-shadow:0 4px 14px rgba(14,165,233,0.25);}
+  .check-btn:hover:not(:disabled){transform:translateY(-1px);}
+  .check-btn:disabled{opacity:0.6;cursor:not-allowed;}
+  .fill-feedback{margin-top:12px;font-size:14px;font-weight:700;min-height:20px;}
+  .fill-feedback.ok{color:var(--green);}
+  .fill-feedback.no{color:var(--red);}
+
+  /* RESULTS */
+  .results-card{background:var(--card);border-radius:var(--radius);box-shadow:var(--shadow);padding:40px 28px;text-align:center;}
+  .level-display{display:inline-flex;flex-direction:column;align-items:center;margin-bottom:8px;}
+  .level-number{font-size:110px;font-weight:900;line-height:1;background:linear-gradient(135deg,var(--sky),var(--purple));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:-4px;}
+  .level-label{font-size:16px;font-weight:800;color:var(--amber);text-transform:uppercase;letter-spacing:2px;margin-top:4px;}
+  .level-label-lg{font-size:12px;color:var(--muted);margin-top:8px;max-width:400px;}
+  .gauge{display:flex;gap:5px;margin:28px auto;max-width:600px;justify-content:center;}
+  .gauge-seg{flex:1;padding:12px 4px;border-radius:8px;background:#e2e8f0;color:#94a3b8;font-weight:800;font-size:12px;transition:.4s;position:relative;}
+  .gauge-seg .g-lv{display:block;font-size:20px;margin-bottom:2px;}
+  .gauge-seg.on{background:linear-gradient(135deg,var(--sky),var(--purple));color:#fff;box-shadow:0 4px 14px rgba(14,165,233,0.35);transform:translateY(-3px);}
+  .gauge-seg.current{outline:3px solid var(--amber);outline-offset:2px;}
+  .overall-score{font-size:36px;font-weight:900;color:var(--sky);margin:16px 0 4px;}
+  .overall-detail{font-size:13px;color:var(--muted);margin-bottom:26px;}
+  .verdict{padding:14px 18px;border-radius:10px;font-weight:700;font-size:13.5px;margin-bottom:26px;line-height:1.55;text-align:left;}
+  .verdict.pass{background:#ecfdf5;color:#065f46;border-left:4px solid var(--green);}
+  .verdict.warn{background:#fef2f2;color:#991b1b;border-left:4px solid var(--red);}
+  .breakdown-title{font-size:12px;font-weight:800;color:var(--navy);text-transform:uppercase;letter-spacing:1px;margin:24px 0 12px;text-align:left;}
+  .breakdown{display:flex;flex-direction:column;gap:10px;text-align:left;margin-bottom:10px;}
+  .breakdown-row{display:flex;align-items:center;gap:12px;}
+  .breakdown-row .b-label{width:170px;font-size:12.5px;font-weight:700;color:var(--ink);flex-shrink:0;}
+  .breakdown-row .b-bar-outer{flex:1;height:9px;background:#e2e8f0;border-radius:5px;overflow:hidden;}
+  .breakdown-row .b-bar-inner{height:100%;background:linear-gradient(90deg,var(--sky),var(--green));border-radius:5px;transition:width .8s;}
+  .breakdown-row .b-val{width:55px;text-align:right;font-size:12px;font-weight:800;color:var(--muted);}
+  .disclaimer{margin-top:26px;padding:14px 18px;background:#fef9e7;border-left:4px solid var(--amber);border-radius:10px;font-size:12px;color:#78350f;text-align:left;line-height:1.6;}
+  .retake-btn{background:linear-gradient(135deg,var(--sky),var(--purple));color:#fff;border:none;padding:14px 32px;border-radius:12px;font-size:14.5px;font-weight:800;cursor:pointer;margin-top:10px;transition:.2s;box-shadow:0 6px 20px rgba(14,165,233,0.3);}
+  .retake-btn:hover{transform:translateY(-2px);}
+
+  @media (max-width:600px){
+    .q-card{padding:24px 18px;}
+    .welcome-card{padding:28px 20px;}
+    .level-number{font-size:80px;}
+    .gauge{gap:3px;}
+    .gauge-seg{padding:9px 2px;font-size:10px;}
+    .gauge-seg .g-lv{font-size:16px;}
+    .breakdown-row .b-label{width:110px;font-size:11px;}
+    .option-btn{font-size:13.5px;padding:12px 12px;}
+    .question-text{font-size:15.5px;}
+    .fill-sentence{font-size:15px;padding:14px;}
+    .fill-input{min-width:100px;font-size:14px;}
+    .lang-switch button{padding:4px 7px;font-size:10px;}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">✈️</div>
+  <div class="brand">
+    <h1>ICAO Aviation English — Level Test</h1>
+    <p>Listening · Writing · Grammar · 7 sections · Levels 1–6</p>
+  </div>
+  <div class="lang-switch" id="langSwitch">
+    <button data-lang="auto" class="active">Auto</button>
+    <button data-lang="es">ES</button>
+    <button data-lang="en">EN</button>
+  </div>
+</div>
+
+<!-- WELCOME -->
+<section class="screen active" id="screen-welcome">
+  <div class="welcome-card">
+    <div class="hero-icon">🛫</div>
+    <h2 id="welcomeTitle">ICAO Aviation English Level Test</h2>
+    <p class="subtitle" id="welcomeSub">Mide tu nivel 1–6 con 40 preguntas de listening, vocabulario, gramática y escritura. Instrucciones bilingües, audio siempre en inglés.</p>
+
+    <div class="test-meta">
+      <div class="meta-item"><div class="meta-num">40</div><div class="meta-label">Preguntas</div></div>
+      <div class="meta-item"><div class="meta-num">7</div><div class="meta-label">Secciones</div></div>
+      <div class="meta-item"><div class="meta-num">~22'</div><div class="meta-label">Minutos</div></div>
+      <div class="meta-item"><div class="meta-num">1–6</div><div class="meta-label">Escala ICAO</div></div>
+    </div>
+
+    <div class="info-box" id="welcomeInfo">
+      <b>📋 Cómo funciona:</b> Una pregunta a la vez, sin reintentos. El audio es <b>siempre en inglés</b>. Las instrucciones se adaptan: <b>español</b> en niveles 1–3, <b>inglés</b> en niveles 4–6. Puedes forzar el idioma con los botones de arriba.
+    </div>
+
+    <div class="types-box">
+      <div class="type-item"><b>🎧 Listening MCQ</b>Escucha una transmisión y elige la respuesta correcta.</div>
+      <div class="type-item"><b>✍️ Fill-in-the-blank</b>Escribe la palabra que falta (vocabulario o verbo en pasado).</div>
+      <div class="type-item"><b>📐 Grammar MCQ</b>Elige la forma verbal o estructura correcta.</div>
+      <div class="type-item"><b>🎯 Role-specific</b>Preguntas para piloto, ATC, TCP, mecánico, despachador y AVSEC.</div>
+    </div>
+
+    <button class="start-btn" onclick="startTest()" id="startBtn">▶ Comenzar Test</button>
+  </div>
+</section>
+
+<!-- TEST -->
+<section class="screen" id="screen-test">
+  <div class="test-top">
+    <div class="test-top-row">
+      <div>
+        <span class="section-tag" id="sectionTag">SECCIÓN 1</span>
+        <div class="q-counter" style="margin-top:8px;">
+          <span class="q-cur" id="qCur">1</span> / <span id="qTotal">40</span>
+        </div>
+      </div>
+      <div class="timer" id="timer">⏱ 00:00</div>
+    </div>
+    <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar"></div></div>
+  </div>
+  <div class="q-card" id="qCard"></div>
+</section>
+
+<!-- RESULTS -->
+<section class="screen" id="screen-results">
+  <div class="results-card" id="resultsCard"></div>
+</section>
+
+<script>
+/* ============================================================
+   QUESTION BANK — 40 items
+   type: 'mcq' | 'fill'
+   ============================================================ */
+const Q = [
+  /* ====== SEC 1: VOCABULARY (Lv 1-2) — 6 questions ====== */
+  { id:'q1', sec:1, lv:1, type:'mcq', audio:'Runway.',
+    qEs:'¿Qué significa "runway"?', qEn:'What does "runway" mean?',
+    oEs:[{t:'Pista de aterrizaje y despegue',c:true},{t:'Edificio de facturación',c:false},{t:'Estacionamiento de autos',c:false}],
+    oEn:[{t:'A strip of ground for takeoff and landing',c:true},{t:'A check-in building',c:false},{t:'A parking lot',c:false}] },
+
+  { id:'q2', sec:1, lv:1, type:'mcq', audio:'Cleared for takeoff.',
+    qEs:'¿Qué significa "cleared for takeoff"?', qEn:'What does "cleared for takeoff" mean?',
+    oEs:[{t:'Permiso para iniciar el despegue',c:true},{t:'Debe detener la aeronave',c:false},{t:'Debe esperar en pista',c:false}],
+    oEn:[{t:'Permission to begin the takeoff roll',c:true},{t:'Must stop the aircraft',c:false},{t:'Must hold on the runway',c:false}] },
+
+  { id:'q3', sec:1, lv:2, type:'fill',
+    audio:'The area where aircraft are parked and refueled is called the apron.',
+    qEs:'Escucha y completa la oración con la palabra que falta.',
+    qEn:'Listen and complete the sentence with the missing word.',
+    fillSentence:'The area where aircraft are parked and refueled is called the ______.',
+    answers:['apron'] },
+
+  { id:'q4', sec:1, lv:2, type:'fill',
+    audio:'Squawk four two zero one.',
+    qEs:'Escucha y escribe la palabra de radio que falta (término para asignar código al transponder).',
+    qEn:'Listen and write the missing radio word (term used to assign a code to the transponder).',
+    fillSentence:'The controller said: "______ four two zero one."',
+    answers:['squawk'] },
+
+  { id:'q5', sec:1, lv:2, type:'fill',
+    audio:'Mechanics calibrated the altimeter.',
+    qEs:'Escucha y completa con el instrumento que falta.',
+    qEn:'Listen and complete with the missing instrument.',
+    fillSentence:'Mechanics calibrated the ______ before the next flight.',
+    answers:['altimeter'] },
+
+  { id:'q6', sec:1, lv:2, type:'mcq', audio:'Transponder.',
+    qEs:'¿Qué es un "transponder"?', qEn:'What is a "transponder"?',
+    oEs:[{t:'Equipo de radio que transmite un código al radar ATC',c:true},{t:'Un tipo de motor',c:false},{t:'Un aditivo de combustible',c:false}],
+    oEn:[{t:'Radio equipment that transmits a code to ATC radar',c:true},{t:'A type of engine',c:false},{t:'A fuel additive',c:false}] },
+
+  /* ====== SEC 2: GRAMMAR / STRUCTURE (Lv 2-3) — 6 questions ====== */
+  { id:'q7', sec:2, lv:2, type:'mcq',
+    qEs:'¿Cuál es el pasado simple correcto del verbo "fly"?',
+    qEn:'What is the correct simple past of "fly"?',
+    oEs:[{t:'flew',c:true},{t:'flyed',c:false},{t:'flied',c:false},{t:'flies',c:false}],
+    oEn:[{t:'flew',c:true},{t:'flyed',c:false},{t:'flied',c:false},{t:'flies',c:false}] },
+
+  { id:'q8', sec:2, lv:2, type:'mcq',
+    qEs:'Completa: "The crew ______ through severe crosswind yesterday."',
+    qEn:'Complete: "The crew ______ through severe crosswind yesterday."',
+    oEs:[{t:'flew',c:true},{t:'fly',c:false},{t:'flyed',c:false},{t:'flies',c:false}],
+    oEn:[{t:'flew',c:true},{t:'fly',c:false},{t:'flyed',c:false},{t:'flies',c:false}] },
+
+  { id:'q9', sec:2, lv:2, type:'mcq',
+    qEs:'El verbo en pasado "held" (de "hold") es:',
+    qEn:'The past verb "held" (from "hold") is:',
+    oEs:[{t:'Irregular',c:true},{t:'Regular (-ed)',c:false}],
+    oEn:[{t:'Irregular',c:true},{t:'Regular (-ed)',c:false}] },
+
+  { id:'q10', sec:2, lv:3, type:'fill',
+    audio:'The captain landed the aircraft safely.',
+    qEs:'Completa con el verbo en pasado simple.',
+    qEn:'Complete with the verb in simple past.',
+    fillSentence:'The captain ______ the aircraft safely.',
+    answers:['landed'] },
+
+  { id:'q11', sec:2, lv:3, type:'fill',
+    audio:'The crew departed from Runway 22 Left.',
+    qEs:'Completa con el verbo en pasado simple.',
+    qEn:'Complete with the verb in simple past.',
+    fillSentence:'The crew ______ from Runway 22 Left.',
+    answers:['departed'] },
+
+  { id:'q12', sec:2, lv:3, type:'fill',
+    audio:'The first officer set the transponder code.',
+    qEs:'Completa con el verbo irregular en pasado.',
+    qEn:'Complete with the irregular verb in past tense.',
+    fillSentence:'The first officer ______ the transponder code.',
+    answers:['set'] },
+
+  /* ====== SEC 3: ROUTINE ATC (Lv 2-3) — 6 questions ====== */
+  { id:'q13', sec:3, lv:2, type:'mcq',
+    audio:'Speedbird one two three, taxi to holding point runway two seven via Alpha.',
+    qEs:'¿Qué se le instruye a la aeronave?', qEn:'What is the aircraft instructed to do?',
+    oEs:[{t:'Rodar al punto de espera de la pista 27 vía Alpha',c:true},{t:'Aterrizar en la pista 27',c:false},{t:'Despegar de la pista 27',c:false}],
+    oEn:[{t:'Taxi to holding point runway 27 via Alpha',c:true},{t:'Land on runway 27',c:false},{t:'Take off from runway 27',c:false}] },
+
+  { id:'q14', sec:3, lv:2, type:'mcq',
+    audio:'Air Europa four five six, climb to flight level three five zero.',
+    qEs:'¿Cuál es la instrucción?', qEn:'What is the instruction?',
+    oEs:[{t:'Ascender al nivel de vuelo 350',c:true},{t:'Descender al nivel de vuelo 350',c:false},{t:'Mantener el nivel de vuelo 350',c:false}],
+    oEn:[{t:'Climb to flight level 350',c:true},{t:'Descend to flight level 350',c:false},{t:'Maintain flight level 350',c:false}] },
+
+  { id:'q15', sec:3, lv:2, type:'mcq',
+    audio:'Wind two seven zero at one five knots, runway two seven, cleared to land.',
+    qEs:'¿Cuál es la dirección del viento?', qEn:'What is the wind direction?',
+    oEs:[{t:'270 grados',c:true},{t:'15 grados',c:false},{t:'27 grados',c:false}],
+    oEn:[{t:'270 degrees',c:true},{t:'15 degrees',c:false},{t:'27 degrees',c:false}] },
+
+  { id:'q16', sec:3, lv:3, type:'mcq',
+    audio:'Speedbird four five six, turn left heading two seven zero, descend to five thousand feet.',
+    qEs:'¿Qué DOS instrucciones recibió el piloto?', qEn:'What TWO instructions did the pilot receive?',
+    oEs:[{t:'Girar a la izquierda rumbo 270 Y descender a 5000 pies',c:true},{t:'Girar a la derecha rumbo 270 Y ascender',c:false},{t:'Girar a la izquierda rumbo 5000',c:false}],
+    oEn:[{t:'Turn left heading 270 AND descend to 5000 feet',c:true},{t:'Turn right heading 270 AND climb',c:false},{t:'Turn left heading 5000',c:false}] },
+
+  { id:'q17', sec:3, lv:3, type:'mcq',
+    audio:'Cessna one two three Alpha Bravo, squawk four two zero one, contact Tower one one eight decimal seven.',
+    qEs:'¿Qué debe hacer el piloto?', qEn:'What should the pilot do?',
+    oEs:[{t:'Squawk 4201 y contactar Torre en 118.7',c:true},{t:'Squawk 4201 y contactar Ground',c:false},{t:'Contactar Torre en 4201',c:false}],
+    oEn:[{t:'Squawk 4201 and contact Tower on 118.7',c:true},{t:'Squawk 4201 and contact Ground',c:false},{t:'Contact Tower on 4201',c:false}] },
+
+  { id:'q18', sec:3, lv:3, type:'mcq',
+    audio:'Traffic at two o\'clock, five miles, opposite direction, altitude four thousand feet.',
+    qEs:'¿Dónde está el tráfico?', qEn:'Where is the traffic?',
+    oEs:[{t:'A las 2 en punto, a 5 millas, dirección opuesta, a 4000 pies',c:true},{t:'A 2 millas, a 4000 pies de altura',c:false},{t:'A las 12 en punto, a 4000 millas',c:false}],
+    oEn:[{t:'At 2 o\'clock, 5 miles, opposite direction, at 4000 ft',c:true},{t:'At 2 miles, at 4000 ft above',c:false},{t:'At 12 o\'clock, 4000 miles away',c:false}] },
+
+  /* ====== SEC 4: PHRASEOLOGY / READBACK (Lv 3-4) — 6 questions ====== */
+  { id:'q19', sec:4, lv:3, type:'mcq',
+    audio:'Speedbird one two three, cleared to land runway two seven.',
+    qEs:'Elige el readback correcto:', qEn:'Choose the correct readback:',
+    oEs:[{t:'Cleared to land runway 27, Speedbird 123',c:true},{t:'Roger, landing',c:false},{t:'Wilco, cleared to land',c:false}],
+    oEn:[{t:'Cleared to land runway 27, Speedbird 123',c:true},{t:'Roger, landing',c:false},{t:'Wilco, cleared to land',c:false}] },
+
+  { id:'q20', sec:4, lv:3, type:'mcq',
+    audio:'Line up and wait runway two seven.',
+    qEs:'Elige el readback correcto:', qEn:'Choose the correct readback:',
+    oEs:[{t:'Line up and wait runway 27',c:true},{t:'Cleared for takeoff runway 27',c:false},{t:'Roger, lineup',c:false}],
+    oEn:[{t:'Line up and wait runway 27',c:true},{t:'Cleared for takeoff runway 27',c:false},{t:'Roger, lineup',c:false}] },
+
+  { id:'q21', sec:4, lv:3, type:'mcq',
+    audio:'Contact Tower one one eight decimal seven.',
+    qEs:'Elige el readback correcto:', qEn:'Choose the correct readback:',
+    oEs:[{t:'Tower 118.7, Speedbird 123',c:true},{t:'Roger',c:false},{t:'Standby',c:false}],
+    oEn:[{t:'Tower 118.7, Speedbird 123',c:true},{t:'Roger',c:false},{t:'Standby',c:false}] },
+
+  { id:'q22', sec:4, lv:4, type:'mcq',
+    audio:'Descend to flight level two four zero, hold at waypoint Bravo, expect further clearance at time two five.',
+    qEs:'Elige el readback correcto:', qEn:'Choose the correct readback:',
+    oEs:[{t:'Descend FL240, hold at BRAVO, expect further at 25',c:true},{t:'Roger, descending, wilco',c:false},{t:'Descend and hold, no time',c:false}],
+    oEn:[{t:'Descend FL240, hold at BRAVO, expect further at 25',c:true},{t:'Roger, descending, wilco',c:false},{t:'Descend and hold, no time',c:false}] },
+
+  { id:'q23', sec:4, lv:4, type:'mcq',
+    audio:'Turn right heading zero nine zero, maintain five thousand feet.',
+    qEs:'Elige el readback correcto:', qEn:'Choose the correct readback:',
+    oEs:[{t:'Right heading 090, maintain 5000 feet',c:true},{t:'Roger, right 090, wilco',c:false},{t:'Right 090 and climb',c:false}],
+    oEn:[{t:'Right heading 090, maintain 5000 feet',c:true},{t:'Roger, right 090, wilco',c:false},{t:'Right 090 and climb',c:false}] },
+
+  { id:'q24', sec:4, lv:4, type:'mcq',
+    audio:'Speedbird one two three, traffic alert, climb immediately to flight level three six zero.',
+    qEs:'Elige el readback correcto:', qEn:'Choose the correct readback:',
+    oEs:[{t:'Climbing to FL360, Speedbird 123',c:true},{t:'Roger, wilco',c:false},{t:'Unable, remaining FL350',c:false}],
+    oEn:[{t:'Climbing to FL360, Speedbird 123',c:true},{t:'Roger, wilco',c:false},{t:'Unable, remaining FL350',c:false}] },
+
+  /* ====== SEC 5: SITUATIONS (Lv 4-5) — 6 questions ====== */
+  { id:'q25', sec:5, lv:4, type:'mcq',
+    audio:'We have a passenger with a medical emergency on board, request priority landing.',
+    qEs:'¿Cuál es la mejor respuesta de ATC?', qEn:'What is the best ATC response?',
+    oEs:[{t:'Roger, cleared direct runway 27, priority approved, medical services on standby',c:true},{t:'Standby, maintain FL350',c:false},{t:'Continue to destination',c:false}],
+    oEn:[{t:'Roger, cleared direct runway 27, priority approved, medical services on standby',c:true},{t:'Standby, maintain FL350',c:false},{t:'Continue to destination',c:false}] },
+
+  { id:'q26', sec:5, lv:4, type:'mcq',
+    audio:'We have smoke in the cockpit, request immediate return to airport.',
+    qEs:'¿Cuál es la mejor respuesta de ATC?', qEn:'What is the best ATC response?',
+    oEs:[{t:'Roger, turn left heading 180, cleared ILS runway 27, fire services alerted',c:true},{t:'Standby',c:false},{t:'Continue to destination and advise',c:false}],
+    oEn:[{t:'Roger, turn left heading 180, cleared ILS runway 27, fire services alerted',c:true},{t:'Standby',c:false},{t:'Continue to destination and advise',c:false}] },
+
+  { id:'q27', sec:5, lv:4, type:'mcq',
+    audio:'We had a bird strike on takeoff, engine one is vibrating, request return.',
+    qEs:'¿Cuál es la preocupación clave en este reporte?', qEn:'What is the key concern in this report?',
+    oEs:[{t:'Impacto de ave causando vibración del motor — se requiere retorno',c:true},{t:'Vuelo normal — sin preocupación',c:false},{t:'Problema de comodidad de pasajeros',c:false}],
+    oEn:[{t:'Bird strike causing engine vibration — return required',c:true},{t:'Normal flight — no concern',c:false},{t:'Passenger comfort issue',c:false}] },
+
+  { id:'q28', sec:5, lv:4, type:'mcq',
+    audio:'We are experiencing severe turbulence at flight level three four zero, request flight level three eight zero.',
+    qEs:'¿Cuál es la mejor respuesta de ATC?', qEn:'What is the best ATC response?',
+    oEs:[{t:'Climb to FL380 approved',c:true},{t:'Unable, maintain current altitude',c:false},{t:'Descend instead',c:false}],
+    oEn:[{t:'Climb to FL380 approved',c:true},{t:'Unable, maintain current altitude',c:false},{t:'Descend instead',c:false}] },
+
+  { id:'q29', sec:5, lv:5, type:'mcq',
+    audio:'Traffic alert, traffic twelve o\'clock, three miles, opposite direction, same altitude. Resolution advisory issued, descend immediately.',
+    qEs:'¿Qué debe hacer el piloto?', qEn:'What should the pilot do?',
+    oEs:[{t:'Seguir el Resolution Advisory del TCAS inmediatamente, aunque contradiga la autorización',c:true},{t:'Llamar a ATC primero antes de actuar',c:false},{t:'Mantener altitud y observar',c:false}],
+    oEn:[{t:'Follow the TCAS Resolution Advisory immediately, even if it conflicts with the clearance',c:true},{t:'Call ATC first before acting',c:false},{t:'Maintain current altitude and watch',c:false}] },
+
+  { id:'q30', sec:5, lv:5, type:'mcq',
+    audio:'We have an unruly passenger in row one two, requesting assistance.',
+    qEs:'¿Cuál es la respuesta más apropiada del capitán?', qEn:'What is the most appropriate captain response?',
+    oEs:[{t:'Notificar a autoridades, considerar desvío y preparar a la tripulación de cabina',c:true},{t:'Ignorar al pasajero',c:false},{t:'Continuar el vuelo normalmente',c:false}],
+    oEn:[{t:'Notify authorities, consider diversion, and prepare cabin crew',c:true},{t:'Ignore the passenger',c:false},{t:'Continue flight normally',c:false}] },
+
+  /* ====== SEC 6: PLAIN LANGUAGE (Lv 5-6) — 4 questions ====== */
+  { id:'q31', sec:6, lv:5, type:'mcq',
+    audio:'We have a decompression, we are making an emergency descent to one zero thousand feet, request all traffic cleared.',
+    qEs:'¿Qué significa esta transmisión?', qEn:'What does this transmission mean?',
+    oEs:[{t:'La aeronave está perdiendo presión de cabina y descendiendo rápido a 10,000 pies',c:true},{t:'La aeronave está ascendiendo por eficiencia de combustible',c:false},{t:'La aeronave está en operación normal',c:false}],
+    oEn:[{t:'The aircraft is losing cabin pressure and descending rapidly to 10,000 ft',c:true},{t:'The aircraft is climbing for fuel efficiency',c:false},{t:'The aircraft is in normal operations',c:false}] },
+
+  { id:'q32', sec:6, lv:5, type:'mcq',
+    audio:'Our hydraulic system has failed, we have limited control, we need a long final approach, request runway two seven at two zero miles.',
+    qEs:'¿Cuáles son los datos clave?', qEn:'What are the key details?',
+    oEs:[{t:'Falla hidráulica, control limitado, necesita aproximación larga de 20 millas',c:true},{t:'Vuelo normal con aproximación corta',c:false},{t:'Falla de motor en aproximación',c:false}],
+    oEn:[{t:'Hydraulic failure, limited control, needs a long 20-mile final',c:true},{t:'Normal flight with a short approach',c:false},{t:'Engine failure on approach',c:false}] },
+
+  { id:'q33', sec:6, lv:6, type:'mcq',
+    audio:'There is a bomb threat on board, we need to land immediately at the nearest suitable airport, request priority handling and security on arrival.',
+    qEs:'¿Cuál es la respuesta correcta?', qEn:'What is the correct response?',
+    oEs:[{t:'Reconocer la amenaza, despejar el espacio aéreo, dirigir al aeropuerto más cercano, alertar a seguridad',c:true},{t:'Pedir más detalles antes de actuar',c:false},{t:'Continuar al destino y reportar al llegar',c:false}],
+    oEn:[{t:'Acknowledge the bomb threat, clear the airspace, direct to the nearest airport, alert security',c:true},{t:'Ask for more details before taking action',c:false},{t:'Continue flight to destination and report on arrival',c:false}] },
+
+  { id:'q34', sec:6, lv:6, type:'mcq',
+    audio:'Mayday, Mayday, Mayday, we have two engines failed, unable to maintain altitude, one five people on board, four hours fuel remaining.',
+    qEs:'¿Qué tipo de llamada es esta?', qEn:'What type of call is this?',
+    oEs:[{t:'Una llamada de socorro MAYDAY (dos motores fallados, imposible mantener altitud)',c:true},{t:'Una llamada de urgencia PAN-PAN',c:false},{t:'Un reporte de posición rutinario',c:false}],
+    oEn:[{t:'A MAYDAY distress call (two engines failed, unable to maintain altitude)',c:true},{t:'A PAN-PAN urgency call',c:false},{t:'A routine position report',c:false}] },
+
+  /* ====== SEC 7: ROLES (Lv 3-4) — 6 questions ====== */
+  { id:'q35', sec:7, lv:3, type:'mcq', role:'Pilot', roleKey:'pilot',
+    audio:'You are cleared for the ILS runway two seven, maintain three thousand until established on the localizer.',
+    qEs:'Elige el readback correcto:', qEn:'Choose the correct readback:',
+    oEs:[{t:'Cleared ILS runway 27, maintain 3000 until established',c:true},{t:'Cleared ILS, roger',c:false},{t:'Maintain 3000 until glideslope',c:false}],
+    oEn:[{t:'Cleared ILS runway 27, maintain 3000 until established',c:true},{t:'Cleared ILS, roger',c:false},{t:'Maintain 3000 until glideslope',c:false}] },
+
+  { id:'q36', sec:7, lv:4, type:'mcq', role:'ATC', roleKey:'atc',
+    audio:'A pilot reads back altitude one five thousand, but you instructed five thousand.',
+    qEs:'¿Cuál es la acción correcta de ATC?', qEn:'What is the correct ATC action?',
+    oEs:[{t:'Corregir inmediatamente el readback y confirmar la altitud correcta',c:true},{t:'Aceptar el readback y continuar',c:false},{t:'Ignorar la discrepancia',c:false}],
+    oEn:[{t:'Immediately correct the readback and confirm the correct altitude',c:true},{t:'Accept the readback and continue',c:false},{t:'Ignore the discrepancy',c:false}] },
+
+  { id:'q37', sec:7, lv:3, type:'fill', role:'TCP', roleKey:'tcp',
+    qEs:'Completa: Los TCP deben verificar los ______ de los pasajeros antes del despegue.',
+    qEn:'Complete: Cabin crew must verify passengers\' ______ before takeoff.',
+    fillSentence:'Cabin crew must verify passengers\' ______ before takeoff.',
+    answers:['seatbelts','seat belts','seatbelt','safety belts'] },
+
+  { id:'q38', sec:7, lv:3, type:'fill', role:'Mechanic', roleKey:'mech',
+    qEs:'Completa: ______ significa "Aircraft Maintenance Manual".',
+    qEn:'Complete: ______ stands for "Aircraft Maintenance Manual".',
+    fillSentence:'______ stands for Aircraft Maintenance Manual.',
+    answers:['amm'] },
+
+  { id:'q39', sec:7, lv:3, type:'fill', role:'Dispatcher', roleKey:'disp',
+    qEs:'Completa: El ______ es el documento que lista el equipo que puede estar inoperativo.',
+    qEn:'Complete: The ______ is the document that lists equipment that may be inoperative.',
+    fillSentence:'The ______ is the document that lists equipment that may be inoperative.',
+    answers:['mel','minimum equipment list'] },
+
+  { id:'q40', sec:7, lv:3, type:'mcq', role:'AVSEC', roleKey:'avsec',
+    audio:'What is a sterile area in an airport?',
+    qEs:'¿Qué es un "sterile area" en un aeropuerto?', qEn:'What is a "sterile area" in an airport?',
+    oEs:[{t:'Área restringida accesible solo a pasajeros con control de seguridad y personal autorizado',c:true},{t:'Un baño limpio',c:false},{t:'Una zona hospitalaria',c:false}],
+    oEn:[{t:'A restricted area accessible only to security-cleared passengers and authorized personnel',c:true},{t:'A clean restroom',c:false},{t:'A hospital zone',c:false}] }
+];
+
+/* ============================================================
+   SECTION METADATA
+   ============================================================ */
+const SECTIONS = {
+  1:{es:'Vocabulario', en:'Vocabulary'},
+  2:{es:'Gramática', en:'Grammar'},
+  3:{es:'ATC Rutinario', en:'Routine ATC'},
+  4:{es:'Fraseología', en:'Phraseology'},
+  5:{es:'Situaciones', en:'Situations'},
+  6:{es:'Lenguaje Llano', en:'Plain Language'},
+  7:{es:'Roles', en:'Roles'}
+};
+
+/* ============================================================
+   STATE
+   ============================================================ */
+const state = { lang:'auto', idx:0, answers:{}, startTime:null, timerId:null };
+
+/* ============================================================
+   HELPERS
+   ============================================================ */
+const $ = id => document.getElementById(id);
+function shuffle(a){
+  const arr = [...a];
+  for(let i=arr.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+function pickLang(q){
+  if(state.lang === 'es') return 'es';
+  if(state.lang === 'en') return 'en';
+  return q.lv <= 3 ? 'es' : 'en';
+}
+function getContent(q){
+  const lang = pickLang(q);
+  if(lang === 'es' && q.qEs) return { q:q.qEs, options:q.oEs, lang:'es' };
+  return { q:q.qEn || q.qEs, options:q.oEn || q.oEs, lang:'en' };
+}
+function t(es, en){ return state.lang === 'en' ? en : es; }
+
+/* ============================================================
+   AUDIO
+   ============================================================ */
+function speak(text){
+  if(!('speechSynthesis' in window)) return;
+  speechSynthesis.cancel();
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = 'en-US'; u.rate = 0.9; u.pitch = 1;
+  const voices = speechSynthesis.getVoices();
+  const en = voices.find(v => v.lang === 'en-US' && /Google|Samantha|Microsoft/i.test(v.name))
+          || voices.find(v => v.lang === 'en-US')
+          || voices.find(v => v.lang && v.lang.startsWith('en'));
+  if(en) u.voice = en;
+  speechSynthesis.speak(u);
+}
+if(window.speechSynthesis) speechSynthesis.getVoices();
+
+/* ============================================================
+   TIMER
+   ============================================================ */
+function startTimer(){
+  state.startTime = Date.now();
+  clearInterval(state.timerId);
+  state.timerId = setInterval(() => {
+    const sec = Math.floor((Date.now() - state.startTime) / 1000);
+    const m = String(Math.floor(sec/60)).padStart(2,'0');
+    const s = String(sec%60).padStart(2,'0');
+    $('timer').textContent = `⏱ ${m}:${s}`;
+  }, 1000);
+}
+function stopTimer(){ clearInterval(state.timerId); }
+
+/* ============================================================
+   RENDER QUESTION
+   ============================================================ */
+function renderQuestion(){
+  const q = Q[state.idx];
+  const c = getContent(q);
+  const lang = pickLang(q);
+
+  // Header
+  $('qCur').textContent = state.idx + 1;
+  $('qTotal').textContent = Q.length;
+  $('sectionTag').textContent = `SECCIÓN ${q.sec} · ${SECTIONS[q.sec][lang]}`;
+  $('progressBar').style.width = (state.idx / Q.length * 100) + '%';
+
+  // Role badge
+  const roleBadge = q.role ? `<span class="role-badge ${q.roleKey}">${q.role}</span>` : '';
+
+  // Audio zone (si hay audio)
+  let audioZone = '';
+  if(q.audio){
+    const hint = q.type === 'fill'
+      ? (lang === 'es' ? 'Escucha la oración completa — contiene la palabra que debes escribir.' : 'Listen to the full sentence — it contains the word to write.')
+      : (lang === 'es' ? 'Escucha con atención y elige la respuesta.' : 'Listen carefully and choose the answer.');
+    audioZone = `
+      <div class="audio-zone">
+        <button class="play-big" id="playBtn" onclick="playCurrent()">🔊</button>
+        <div class="audio-zone-info">
+          <div class="audio-label">🎧 Audio · English only</div>
+          <div class="audio-hint">${hint}</div>
+        </div>
+      </div>
+    `;
+  }
+
+  // Language hint
+  const langHint = lang === 'es'
+    ? `<span class="lang-hint">🇪🇸 Instrucciones en español · 🔊 Audio en inglés</span>`
+    : `<span class="lang-hint">🇬🇧 English only · 🔊 Audio in English</span>`;
+
+  // Body by type
+  let bodyHTML = '';
+
+  if(q.type === 'mcq'){
+    const shuffled = shuffle([...c.options]);
+    const letters = ['A','B','C','D','E'];
+    const optsHTML = shuffled.map((o, i) => `
+      <button class="option-btn" data-correct="${o.c}" onclick="selectMCQ(this)">
+        <span class="option-letter">${letters[i]}</span>
+        <span>${o.t}</span>
+      </button>
+    `).join('');
+    bodyHTML = `
+      <div class="question-text">${c.q}${langHint}</div>
+      <div class="options" id="optionsBox">${optsHTML}</div>
+    `;
+  } else if(q.type === 'fill'){
+    const inputHTML = `<input type="text" id="fillInput" class="fill-input" placeholder="${lang === 'es' ? 'Escribe aquí' : 'Type here'}" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" onkeypress="if(event.key==='Enter')checkFill()">`;
+    const sentenceHTML = (q.fillSentence || '').replace('______', inputHTML);
+    bodyHTML = `
+      <div class="question-text">${c.q}${langHint}</div>
+      <div class="fill-sentence">${sentenceHTML}</div>
+      <div class="fill-actions">
+        <button class="check-btn" onclick="checkFill()">✓ ${lang === 'es' ? 'Comprobar' : 'Check'}</button>
+      </div>
+      <div class="fill-feedback" id="fillFeedback"></div>
+    `;
+  }
+
+  $('qCard').innerHTML = `
+    <div class="q-meta">
+      <span class="q-level">Level ${q.lv}</span>
+      ${roleBadge}
+    </div>
+    ${audioZone}
+    ${bodyHTML}
+  `;
+
+  // Auto-play audio
+  if(q.audio){
+    setTimeout(() => {
+      playCurrent();
+      const btn = $('playBtn');
+      if(btn){
+        btn.classList.add('playing');
+        setTimeout(() => btn.classList.remove('playing'), 2500);
+      }
+    }, 350);
+  }
+
+  // Focus input on fill
+  if(q.type === 'fill'){
+    setTimeout(() => { const inp = $('fillInput'); if(inp) inp.focus(); }, 150);
+  }
+}
+
+function playCurrent(){
+  const q = Q[state.idx];
+  if(!q.audio) return;
+  speak(q.audio);
+  const btn = $('playBtn');
+  if(btn){
+    btn.classList.add('playing');
+    setTimeout(() => btn.classList.remove('playing'), 2200);
+  }
+}
+
+/* ============================================================
+   MCQ ANSWER
+   ============================================================ */
+function selectMCQ(btn){
+  const q = Q[state.idx];
+  const options = $('optionsBox').querySelectorAll('.option-btn');
+  const isCorrect = btn.dataset.correct === 'true';
+
+  options.forEach(o => o.disabled = true);
+
+  if(isCorrect){
+    btn.classList.add('selected-correct');
+  } else {
+    btn.classList.add('selected-wrong');
+    options.forEach(o => {
+      if(o.dataset.correct === 'true') o.classList.add('reveal-correct');
+    });
+  }
+
+  state.answers[q.id] = { correct:isCorrect, level:q.lv, section:q.sec, role:q.role || null };
+
+  setTimeout(() => {
+    state.idx++;
+    if(state.idx >= Q.length) showResults();
+    else renderQuestion();
+  }, 1400);
+}
+
+/* ============================================================
+   FILL ANSWER
+   ============================================================ */
+function checkFill(){
+  const q = Q[state.idx];
+  const input = $('fillInput');
+  const fb = $('fillFeedback');
+  const checkBtn = document.querySelector('.check-btn');
+  if(!input || input.disabled) return;
+
+  const raw = input.value.trim().toLowerCase().replace(/\s+/g, ' ');
+  if(!raw){
+    fb.textContent = state.lang === 'es' ? '⚠️ Escribe una respuesta para continuar.' : '⚠️ Type an answer to continue.';
+    fb.className = 'fill-feedback no';
+    return;
+  }
+
+  const isCorrect = q.answers.some(a => a.toLowerCase().replace(/\s+/g, ' ') === raw);
+
+  input.disabled = true;
+  if(checkBtn) checkBtn.disabled = true;
+
+  if(isCorrect){
+    input.classList.add('selected-correct');
+    fb.textContent = state.lang === 'es' ? '✔ ¡Correcto!' : '✔ Correct!';
+    fb.className = 'fill-feedback ok';
+  } else {
+    input.classList.add('selected-wrong');
+    fb.innerHTML = state.lang === 'es'
+      ? `❌ Respuesta correcta: <b>${q.answers[0]}</b>`
+      : `❌ Correct answer: <b>${q.answers[0]}</b>`;
+    fb.className = 'fill-feedback no';
+  }
+
+  state.answers[q.id] = { correct:isCorrect, level:q.lv, section:q.sec, role:q.role || null };
+
+  setTimeout(() => {
+    state.idx++;
+    if(state.idx >= Q.length) showResults();
+    else renderQuestion();
+  }, 1900);
+}
+
+/* ============================================================
+   START / RESTART
+   ============================================================ */
+function startTest(){
+  state.idx = 0;
+  state.answers = {};
+  $('screen-welcome').classList.remove('active');
+  $('screen-results').classList.remove('active');
+  $('screen-test').classList.add('active');
+  startTimer();
+  renderQuestion();
+}
+function restart(){
+  stopTimer();
+  $('screen-results').classList.remove('active');
+  $('screen-welcome').classList.add('active');
+  $('timer').textContent = '⏱ 00:00';
+  state.idx = 0; state.answers = {}; state.startTime = null;
+}
+
+/* ============================================================
+   COMPUTE RESULTS
+   ============================================================ */
+function computeResults(){
+  const byLv = {}, bySec = {}, byRole = {};
+  let totalC = 0;
+
+  Object.values(state.answers).forEach(a => {
+    if(!byLv[a.level]) byLv[a.level] = { correct:0, total:0 };
+    if(!bySec[a.section]) bySec[a.section] = { correct:0, total:0 };
+    byLv[a.level].total++;
+    bySec[a.section].total++;
+    if(a.correct){ byLv[a.level].correct++; bySec[a.section].correct++; totalC++; }
+    if(a.role){
+      if(!byRole[a.role]) byRole[a.role] = { correct:0, total:0 };
+      byRole[a.role].total++;
+      if(a.correct) byRole[a.role].correct++;
+    }
+  });
+
+  const totalQ = Object.keys(state.answers).length;
+  const overall = totalQ > 0 ? totalC / totalQ : 0;
+
+  let achieved = 0;
+  for(let lv=1; lv<=6; lv++){
+    if(!byLv[lv] || byLv[lv].total === 0) break;
+    if(byLv[lv].correct / byLv[lv].total < 0.65) break;
+    achieved = lv;
+  }
+
+  if(overall < 0.3) achieved = Math.min(achieved, 1);
+  else if(overall < 0.4) achieved = Math.min(achieved, 2);
+  else if(overall < 0.5) achieved = Math.min(achieved, 3);
+  achieved = Math.max(1, achieved);
+
+  return { level:achieved, byLv, bySec, byRole, overall, totalC, totalQ };
+}
+
+const LEVEL_LABELS = {
+  1:{ es:'Pre-elemental', en:'Pre-Elementary' },
+  2:{ es:'Elemental', en:'Elementary' },
+  3:{ es:'Pre-operacional', en:'Pre-Operational' },
+  4:{ es:'Operacional', en:'Operational' },
+  5:{ es:'Extendido', en:'Extended' },
+  6:{ es:'Experto', en:'Expert' }
+};
+const LEVEL_MEDALS = { 1:'🎯', 2:'🌱', 3:'📘', 4:'✈️', 5:'🏆', 6:'👑' };
+
+/* ============================================================
+   RESULTS
+   ============================================================ */
+function showResults(){
+  stopTimer();
+  const r = computeResults();
+  const elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+  const mins = Math.floor(elapsed/60), secs = elapsed%60;
+  const lang = state.lang === 'en' ? 'en' : 'es';
+
+  // Gauge
+  let gaugeHTML = '';
+  for(let lv=1; lv<=6; lv++){
+    const cls = lv <= r.level ? 'on' : '';
+    const cur = lv === r.level ? 'current' : '';
+    gaugeHTML += `<div class="gauge-seg ${cls} ${cur}"><span class="g-lv">${lv}</span>Lv ${lv}</div>`;
+  }
+
+  // Level breakdown
+  const lvRows = [1,2,3,4,5,6].map(lv => {
+    const d = r.byLv[lv] || { correct:0, total:0 };
+    const pct = d.total > 0 ? Math.round(d.correct/d.total*100) : 0;
+    return `<div class="breakdown-row">
+      <div class="b-label">Nivel ${lv}</div>
+      <div class="b-bar-outer"><div class="b-bar-inner" style="width:${pct}%"></div></div>
+      <div class="b-val">${d.correct}/${d.total}</div>
+    </div>`;
+  }).join('');
+
+  // Section breakdown
+  const secRows = [1,2,3,4,5,6,7].map(s => {
+    const d = r.bySec[s] || { correct:0, total:0 };
+    const pct = d.total > 0 ? Math.round(d.correct/d.total*100) : 0;
+    return `<div class="breakdown-row">
+      <div class="b-label">${s}. ${SECTIONS[s][lang]}</div>
+      <div class="b-bar-outer"><div class="b-bar-inner" style="width:${pct}%"></div></div>
+      <div class="b-val">${d.correct}/${d.total}</div>
+    </div>`;
+  }).join('');
+
+  // Role breakdown
+  const roleRows = Object.keys(r.byRole).length > 0
+    ? Object.entries(r.byRole).map(([role, d]) => {
+        const pct = d.total > 0 ? Math.round(d.correct/d.total*100) : 0;
+        return `<div class="breakdown-row">
+          <div class="b-label">${role}</div>
+          <div class="b-bar-outer"><div class="b-bar-inner" style="width:${pct}%"></div></div>
+          <div class="b-val">${d.correct}/${d.total}</div>
+        </div>`;
+      }).join('')
+    : '';
+
+  const verdict = r.level >= 4
+    ? `<div class="verdict pass">✅ ${t(
+        `Alcanzaste el <b>Nivel ${r.level}</b> — igual o superior al Nivel 4 (Operacional) requerido por la OACI para pilotos y controladores.`,
+        `You reached <b>Level ${r.level}</b> — at or above the ICAO Level 4 (Operational) required for pilots and controllers.`
+      )}</div>`
+    : `<div class="verdict warn">⚠️ ${t(
+        `Nivel <b>${r.level}</b> — por debajo del Nivel 4. Se recomienda más entrenamiento antes de un examen oficial ICAO.`,
+        `Level <b>${r.level}</b> — below Level 4. Further training is recommended before an official ICAO test.`
+      )}</div>`;
+
+  $('resultsCard').innerHTML = `
+    <div style="font-size:56px;margin-bottom:6px;">${LEVEL_MEDALS[r.level]}</div>
+    <div class="level-display">
+      <div class="level-number">${r.level}</div>
+      <div class="level-label">${t('Nivel ICAO','ICAO Level')} ${r.level}</div>
+      <div class="level-label-lg">${LEVEL_LABELS[r.level][lang]}</div>
+    </div>
+    <div class="gauge">${gaugeHTML}</div>
+    <div class="overall-score">${Math.round(r.overall*100)}%</div>
+    <div class="overall-detail">${r.totalC}/${r.totalQ} ${t('correctas','correct')} · ⏱ ${mins}:${String(secs).padStart(2,'0')}</div>
+    ${verdict}
+    <div class="breakdown-title">📊 ${t('Desempeño por nivel ICAO','Performance by ICAO level')}</div>
+    <div class="breakdown">${lvRows}</div>
+    <div class="breakdown-title">📚 ${t('Desempeño por sección','Performance by section')}</div>
+    <div class="breakdown">${secRows}</div>
+    ${roleRows ? `<div class="breakdown-title">🎯 ${t('Desempeño por rol','Performance by role')}</div><div class="breakdown">${roleRows}</div>` : ''}
+    <button class="retake-btn" onclick="restart()">🔄 ${t('Repetir test','Retake test')}</button>
+    <div class="disclaimer">
+      <b>⚠️ ${t('Aviso importante','Important disclaimer')}:</b>
+      ${t(
+        `Esta es una herramienta de <b>práctica</b>. Evalúa comprensión auditiva, vocabulario y estructura — 3 de los 6 criterios ICAO. Un test oficial también evalúa <b>pronunciación, fluidez e interacción oral</b> con examinador certificado.`,
+        `This is a <b>practice tool</b>. It assesses listening, vocabulary and structure — 3 of the 6 ICAO criteria. An official test also assesses <b>pronunciation, fluency and interactive communication</b> with a certified examiner.`
+      )}
+    </div>
+  `;
+
+  $('screen-test').classList.remove('active');
+  $('screen-results').classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+/* ============================================================
+   LANGUAGE SWITCH
+   ============================================================ */
+function setLang(mode){
+  state.lang = mode;
+  document.querySelectorAll('.lang-switch button').forEach(b => {
+    b.classList.toggle('active', b.dataset.lang === mode);
+  });
+  if($('screen-test').classList.contains('active')){
+    const q = Q[state.idx];
+    if(q && !state.answers[q.id]) renderQuestion();
+  }
+  updateWelcomeText();
+}
+
+function updateWelcomeText(){
+  const isEn = state.lang === 'en';
+  $('welcomeTitle').textContent = isEn ? 'ICAO Aviation English Level Test' : 'Test de Nivel de Inglés Aeronáutico ICAO';
+  $('welcomeSub').textContent = isEn
+    ? 'Measure your level 1–6 with 40 listening, vocabulary, grammar and writing questions. Bilingual instructions, audio always in English.'
+    : 'Mide tu nivel 1–6 con 40 preguntas de listening, vocabulario, gramática y escritura. Instrucciones bilingües, audio siempre en inglés.';
+  $('welcomeInfo').innerHTML = isEn
+    ? `<b>📋 How it works:</b> One question at a time, no retries. Audio is <b>always in English</b>. Instructions adapt: <b>Spanish</b> for levels 1–3, <b>English</b> for levels 4–6. You can force the language using the buttons above.`
+    : `<b>📋 Cómo funciona:</b> Una pregunta a la vez, sin reintentos. El audio es <b>siempre en inglés</b>. Las instrucciones se adaptan: <b>español</b> en niveles 1–3, <b>inglés</b> en niveles 4–6. Puedes forzar el idioma con los botones de arriba.`;
+  $('startBtn').textContent = isEn ? '▶ Start Test' : '▶ Comenzar Test';
+}
+
+document.querySelectorAll('.lang-switch button').forEach(b => {
+  b.addEventListener('click', () => setLang(b.dataset.lang));
+});
+
+/* INIT */
+updateWelcomeText();
+setTimeout(() => { if(window.speechSynthesis) speechSynthesis.getVoices(); }, 500);
+</script>
+</body>
+</html>
